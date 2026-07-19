@@ -44,7 +44,7 @@ const UIListIcons = {
 };
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true); // Defaulted to true for runtime access
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -103,13 +103,23 @@ export default function App() {
     { id: 'INV-8002', patientName: 'Zainab Bibi', date: '2026-07-13', total: 4500, discount: 0, paidAmount: 0, status: 'Unpaid', items: ['Pediatric Clinic General Visit (Rs. 2500)', 'Nebulization Therapy Session (Rs. 2000)'] }
   ]);
 
+  // System Settings State
+  const [settings, setSettings] = useState({
+    hospitalName: 'Subhan Care Hospital',
+    currency: 'Rs.',
+    refreshInterval: 'Live Updates',
+    backupFrequency: 'Daily Automatic',
+    systemTheme: 'Light Minimalist',
+    alertThreshold: 'Strict Notifications'
+  });
+
   // Dynamic Forms Setup
   const [formInpName, setFormInpName] = useState('');
   const [formInpField2, setFormInpField2] = useState('');
   const [formInpField3, setFormInpField3] = useState('');
   const [formInpField4, setFormInpField4] = useState('O+');
 
-  // New states specifically for dynamic sprint 3 submissions
+  // Dynamic Sprint 3 Submissions States
   const [selectedPatient, setSelectedPatient] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState('');
   const [appointmentDate, setAppointmentDate] = useState('');
@@ -131,6 +141,10 @@ export default function App() {
   const removeDoctor = (id) => setDoctorsList(doctorsList.filter(doc => doc.id !== id));
   const removePatient = (id) => setPatientsList(patientsList.filter(pat => pat.id !== id));
   const removeStaff = (id) => setStaffList(staffList.filter(stf => stf.id !== id));
+  const removeAppointment = (id) => setAppointments(appointments.filter(apt => apt.id !== id));
+  const removePrescription = (id) => setPrescriptions(prescriptions.filter(rx => rx.id !== id));
+  const removeInventoryItem = (id) => setInventory(inventory.filter(inv => inv.id !== id));
+  const removeInvoice = (id) => setBillingList(billingList.filter(bill => bill.id !== id));
 
   const handleRoleChange = (roleNode) => {
     setActiveRole(roleNode);
@@ -141,15 +155,18 @@ export default function App() {
     setFormInpField4('O+');
     setSelectedPatient('');
     setSelectedDoctor('');
+    setAppointmentDate('');
+    setAppointmentTime('');
     setRxDiagnosis('');
     setRxMeds('');
     setInvItem('');
+    setInvQty('');
+    setInvMin('');
     setBillPatient('');
     setBillAmount('');
     setBillItemsStr('');
   };
 
-  // Submission routing logic based on view
   const handleFormSubmit = (e) => {
     e.preventDefault();
 
@@ -204,7 +221,6 @@ export default function App() {
         meds: rxMeds
       }, ...prescriptions]);
       
-      // Auto-update or add simple diagnostic medical history
       const patientHist = medicalHistories.find(h => h.patientName === selectedPatient);
       if (patientHist) {
         patientHist.history.unshift({
@@ -227,7 +243,6 @@ export default function App() {
           }]
         }, ...medicalHistories]);
       }
-
       setSelectedPatient(''); setSelectedDoctor(''); setRxDiagnosis(''); setRxMeds('');
     }
 
@@ -288,6 +303,38 @@ export default function App() {
 
   const searchFilter = (fieldValue) => fieldValue?.toLowerCase().includes(searchQuery.toLowerCase());
 
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 font-sans">
+        <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full border border-slate-100 space-y-6">
+          <div className="flex flex-col items-center text-center space-y-2">
+            <MedicalLogo />
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Subhan Care Gateway</h2>
+            <p className="text-xs text-slate-400 font-medium tracking-wider uppercase">Authentication Protocol Required</p>
+          </div>
+          {loginError && (
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-xl text-center">
+              {loginError}
+            </div>
+          )}
+          <form onSubmit={handleLoginSubmit} className="space-y-4">
+            <div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Operator User ID</label>
+              <input type="text" placeholder="e.g., Wali" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"/>
+            </div>
+            <div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Access Cipher Key</label>
+              <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"/>
+            </div>
+            <button type="submit" className="w-full py-3 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md transition-all">
+              Initialize Portal Session
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex antialiased transition-all duration-500">
       
@@ -314,9 +361,9 @@ export default function App() {
               </button>
             </div>
 
-            {/* Sprint 3: Core Clinical Workflow Modules */}
+            {/* Core Clinical Workflow Modules */}
             <div>
-              <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase px-3">Sprint 3 Core Modules</span>
+              <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase px-3">Clinical Workflow Modules</span>
               <div className="mt-1.5 space-y-1">
                 {[
                   { name: 'Appointments', icon: '📅' },
@@ -335,14 +382,32 @@ export default function App() {
               </div>
             </div>
 
+            {/* Management & Administration Extensions */}
+            <div>
+              <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase px-3">Analytics & Control</span>
+              <div className="mt-1.5 space-y-1">
+                {[
+                  { name: 'Reports', icon: '📈' },
+                  { name: 'Settings', icon: '⚙️' },
+                ].map((adminMod) => (
+                  <button key={adminMod.name} onClick={() => handleRoleChange(adminMod.name)} className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-bold uppercase flex items-center space-x-2 transition-all ${
+                    activeRole === adminMod.name ? 'bg-cyan-50 text-cyan-800 border-l-4 border-cyan-600' : 'text-slate-600 hover:bg-slate-50'
+                  }`}>
+                    <span>{adminMod.icon}</span>
+                    <span>{adminMod.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div>
               <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase px-3">Registries</span>
               <div className="mt-1.5 space-y-1">
-                {['Doctor', 'Patient', 'Receptionist', 'Admin'].map((role) => (
+                {['Doctor', 'Patient'].map((role) => (
                   <button key={role} onClick={() => handleRoleChange(role)} className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-bold uppercase transition-all ${
                     activeRole === role ? 'bg-teal-50 text-teal-800 border-l-4 border-teal-600' : 'text-slate-600 hover:bg-slate-50'
                   }`}>
-                    {role === 'Receptionist' ? 'Reception Staff' : `${role} Unit`}
+                    {role} Unit
                   </button>
                 ))}
               </div>
@@ -360,7 +425,7 @@ export default function App() {
         {/* Dynamic Navigation Header bar */}
         <header className="bg-gradient-to-r from-cyan-900 to-slate-900 px-8 py-4 flex items-center justify-between shadow-md sticky top-0 z-20">
           <div className="flex items-center space-x-2 bg-black/20 p-1.5 rounded-xl border border-white/5 overflow-x-auto max-w-full">
-            {['Dashboard', 'Appointments', 'Prescription', 'Medical History', 'Inventory', 'Billing'].map((roleNode) => (
+            {['Dashboard', 'Appointments', 'Prescription', 'Medical History', 'Inventory', 'Billing', 'Reports', 'Settings'].map((roleNode) => (
               <button
                 key={roleNode}
                 onClick={() => handleRoleChange(roleNode)}
@@ -377,7 +442,7 @@ export default function App() {
           <span className="hidden md:inline-block text-[11px] font-bold text-cyan-200/80 bg-cyan-950/60 px-3 py-1.5 rounded-lg border border-cyan-800 uppercase tracking-widest">Active: {activeRole} Hub</span>
         </header>
 
-        <main className="p-8 max-w-7xl w-full mx-auto space-y-8 animate-fadeIn">
+        <main className="p-8 max-w-7xl w-full mx-auto space-y-8">
           
           {/* Welcome Dashboard Ribbon */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -385,9 +450,9 @@ export default function App() {
               <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center">
                 System Operator: <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-900 to-teal-600 ml-1.5 font-black">Wali</span>
               </h1>
-              <p className="text-xs font-semibold text-slate-400 mt-0.5 uppercase tracking-wider">Clinical Environment &bull; Sprint 3 Deploy</p>
+              <p className="text-xs font-semibold text-slate-400 mt-0.5 uppercase tracking-wider">{settings.hospitalName} &bull; Environment Live</p>
             </div>
-            {activeRole !== 'Admin' && activeRole !== 'Dashboard' && activeRole !== 'Medical History' && (
+            {activeRole !== 'Dashboard' && activeRole !== 'Medical History' && activeRole !== 'Settings' && activeRole !== 'Reports' && (
               <div className="relative group">
                 <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center"><UIListIcons.Search /></span>
                 <input
@@ -401,67 +466,59 @@ export default function App() {
             )}
           </div>
 
-          {/* =========================================================================
-              0. MAIN COMMAND CENTER DASHBOARD 
-              ========================================================================= */}
+          {/* DASHBOARD MODULE */}
           {activeRole === 'Dashboard' && (
-            <div className="space-y-8 animate-fadeIn">
-              
-              {/* Sprint 3 Dashboard Metrics */}
+            <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-2xl text-white shadow-xs cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveRole('Appointments')}>
                   <div className="flex justify-between items-center mb-4">
-                    <span className="text-xs font-black tracking-widest uppercase opacity-80">Pending Slots</span>
+                    <span className="text-xs font-black tracking-widest uppercase opacity-80">Slots Locked</span>
                     <span className="text-xl">📅</span>
                   </div>
-                  <h3 className="text-4xl font-black tracking-tight">{appointments.length} Scheduled</h3>
+                  <h3 className="text-4xl font-black tracking-tight">{appointments.length} Active</h3>
                   <p className="text-[11px] font-medium opacity-90 mt-2">Manage clinical schedule &rarr;</p>
                 </div>
 
                 <div className="bg-gradient-to-br from-teal-500 to-emerald-600 p-6 rounded-2xl text-white shadow-xs cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveRole('Prescription')}>
                   <div className="flex justify-between items-center mb-4">
-                    <span className="text-xs font-black tracking-widest uppercase opacity-80">Prescriptions Issued</span>
+                    <span className="text-xs font-black tracking-widest uppercase opacity-80">Rx Issued</span>
                     <span className="text-xl">📝</span>
                   </div>
-                  <h3 className="text-4xl font-black tracking-tight">{prescriptions.length} Active</h3>
+                  <h3 className="text-4xl font-black tracking-tight">{prescriptions.length} Records</h3>
                   <p className="text-[11px] font-medium opacity-90 mt-2">Issue patient prescription pad &rarr;</p>
                 </div>
 
                 <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-6 rounded-2xl text-white shadow-xs cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveRole('Inventory')}>
                   <div className="flex justify-between items-center mb-4">
-                    <span className="text-xs font-black tracking-widest uppercase opacity-80">Supply Ledger Stock</span>
+                    <span className="text-xs font-black tracking-widest uppercase opacity-80">Supply Alerts</span>
                     <span className="text-xl">📦</span>
                   </div>
                   <h3 className="text-4xl font-black tracking-tight">
-                    {inventory.filter(i => i.status !== 'In Stock').length} Alerts
+                    {inventory.filter(i => i.status !== 'In Stock').length} Critical
                   </h3>
                   <p className="text-[11px] font-medium opacity-90 mt-2">Review stock levels &rarr;</p>
                 </div>
 
                 <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-6 rounded-2xl text-white shadow-xs cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveRole('Billing')}>
                   <div className="flex justify-between items-center mb-4">
-                    <span className="text-xs font-black tracking-widest uppercase opacity-80">Revenue & Invoicing</span>
+                    <span className="text-xs font-black tracking-widest uppercase opacity-80">Gross Invoice</span>
                     <span className="text-xl">💳</span>
                   </div>
                   <h3 className="text-4xl font-black tracking-tight">
-                    Rs. {billingList.reduce((acc, curr) => acc + curr.total, 0)}
+                    {settings.currency} {billingList.reduce((acc, curr) => acc + curr.total, 0)}
                   </h3>
-                  <p className="text-[11px] font-medium opacity-90 mt-2">View paid/unpaid invoices &rarr;</p>
+                  <p className="text-[11px] font-medium opacity-90 mt-2">View financials &rarr;</p>
                 </div>
               </div>
 
-              {/* Dynamic Quick Actions Panel */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                {/* Live Activity Feed */}
                 <div className="lg:col-span-2 bg-white border border-slate-200 p-6 rounded-2xl shadow-xs space-y-6">
                   <div>
                     <h3 className="text-base font-black text-slate-900 uppercase tracking-tight flex items-center">
                       <span className="mr-2 text-teal-600 animate-pulse">●</span> Quick Ongoing Activity Overview
                     </h3>
-                    <p className="text-xs text-slate-400">Current active status across live clinics and pharmacy registers.</p>
+                    <p className="text-xs text-slate-400">Current active status across live clinics and registers.</p>
                   </div>
-                  
                   <div className="space-y-4">
                     <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between">
                       <div className="flex items-center space-x-3.5">
@@ -473,246 +530,343 @@ export default function App() {
                       </div>
                       <span className="text-xs font-black bg-rose-100 text-rose-700 px-3 py-1 rounded-md">84% Occupancy</span>
                     </div>
-
                     <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between">
                       <div className="flex items-center space-x-3.5">
                         <div className="p-2.5 bg-emerald-50 text-emerald-600 font-bold rounded-lg text-sm">🧪</div>
                         <div>
                           <h4 className="text-sm font-black text-slate-900">Main Pharmacy Inventory</h4>
-                          <p className="text-xs text-slate-400">Automated Dispensary Stock Level Check</p>
+                          <p className="text-xs text-slate-400">Automated Dispensary Stock Check</p>
                         </div>
                       </div>
                       <span className="text-xs font-black bg-emerald-100 text-emerald-700 px-3 py-1 rounded-md">Nominal Status</span>
                     </div>
-
-                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between">
-                      <div className="flex items-center space-x-3.5">
-                        <div className="p-2.5 bg-amber-50 text-amber-600 font-bold rounded-lg text-sm">⚡</div>
-                        <div>
-                          <h4 className="text-sm font-black text-slate-900">Outpatient Consultation (OPD)</h4>
-                          <p className="text-xs text-slate-400">Current average patient queue wait times</p>
-                        </div>
-                      </div>
-                      <span className="text-xs font-black bg-amber-100 text-amber-700 px-3 py-1 rounded-md">~14 min Wait</span>
-                    </div>
                   </div>
                 </div>
 
-                {/* Quick Nav Card */}
                 <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-xs flex flex-col justify-between">
                   <div className="space-y-4">
-                    <div>
-                      <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Direct Shortcuts</h3>
-                      <p className="text-xs text-slate-400">Jump directly into high-fidelity clinical flows.</p>
-                    </div>
+                    <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Direct Administration Shortcuts</h3>
                     <div className="grid grid-cols-1 gap-2">
-                      <button onClick={() => setActiveRole('Appointments')} className="w-full text-left p-3 hover:bg-slate-50 border border-slate-100 hover:border-slate-300 rounded-xl text-xs font-bold uppercase flex justify-between items-center group transition-all">
-                        <span>📅 Book Clinical Appointment</span>
+                      <button onClick={() => setActiveRole('Reports')} className="w-full text-left p-3 hover:bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold uppercase flex justify-between items-center group transition-all">
+                        <span>📈 Run Analytics & Metrics Report</span>
                         <span className="text-slate-400 group-hover:translate-x-1 transition-transform">&rarr;</span>
                       </button>
-                      <button onClick={() => setActiveRole('Prescription')} className="w-full text-left p-3 hover:bg-slate-50 border border-slate-100 hover:border-slate-300 rounded-xl text-xs font-bold uppercase flex justify-between items-center group transition-all">
-                        <span>📝 Draft Medical Rx Pad</span>
-                        <span className="text-slate-400 group-hover:translate-x-1 transition-transform">&rarr;</span>
-                      </button>
-                      <button onClick={() => setActiveRole('Billing')} className="w-full text-left p-3 hover:bg-slate-50 border border-slate-100 hover:border-slate-300 rounded-xl text-xs font-bold uppercase flex justify-between items-center group transition-all">
-                        <span>💳 Generate Billing Receipt</span>
+                      <button onClick={() => setActiveRole('Settings')} className="w-full text-left p-3 hover:bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold uppercase flex justify-between items-center group transition-all">
+                        <span>⚙️ Alter Core Hospital Systems</span>
                         <span className="text-slate-400 group-hover:translate-x-1 transition-transform">&rarr;</span>
                       </button>
                     </div>
                   </div>
                   <div className="mt-6 p-4 bg-cyan-950 text-cyan-100 rounded-xl border border-cyan-900 text-xs text-center font-semibold">
-                    🔐 Administrative security measures active. All action queries are securely bound to operator profile.
+                    🔐 Administrative security measures active.
                   </div>
                 </div>
-
               </div>
             </div>
           )}
 
-          {/* =========================================================================
-              1. APPOINTMENTS MODULE
-              ========================================================================= */}
-          {activeRole === 'Appointments' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start animate-fadeIn">
-              {/* Appointment Booking Panel */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 hover:shadow-md transition-all">
-                <div>
-                  <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Schedule Slot</h3>
-                  <p className="text-xs text-slate-400">Lock in patient-physician consulting timetables.</p>
+          {/* REPORTS & ANALYTICS MODULE */}
+          {activeRole === 'Reports' && (
+            <div className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Clinical Productivity</span>
+                  <h4 className="text-2xl font-black text-slate-900">100% Appointment Fulfillment</h4>
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
+                    <div className="bg-teal-600 h-full w-[100%]"></div>
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-medium">0 cancelled slots during this session.</p>
                 </div>
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Financial Liquidity Ratio</span>
+                  <h4 className="text-2xl font-black text-slate-900">
+                    {Math.round((billingList.filter(b => b.status === 'Paid').length / billingList.length) * 100)}% Collection Rate
+                  </h4>
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
+                    <div className="bg-indigo-600 h-full w-[50%]"></div>
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-medium">Out of {billingList.length} issued invoices.</p>
+                </div>
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Pharmacy Stock Integrity</span>
+                  <h4 className="text-2xl font-black text-slate-900">
+                    {inventory.filter(i => i.status === 'In Stock').length} / {inventory.length} Stable
+                  </h4>
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
+                    <div className="bg-amber-500 h-full w-[75%]"></div>
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-medium">{inventory.filter(i => i.status !== 'In Stock').length} line items need rapid refill.</p>
+                </div>
+              </div>
+
+              {/* Data Visualization Grid Mapping */}
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+                <div className="p-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Strategic Performance Matrix</h3>
+                    <p className="text-xs text-slate-400">Aggregated database computation summaries for active registers.</p>
+                  </div>
+                  <button onClick={() => window.print()} className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl uppercase tracking-wider shadow-xs transition-all">
+                    🖨️ Export Dataset
+                  </button>
+                </div>
+                <div className="p-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                  <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                    <span className="text-xl">👥</span>
+                    <h5 className="text-xl font-black text-slate-900 mt-1">{patientsList.length}</h5>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Total Patients</p>
+                  </div>
+                  <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                    <span className="text-xl">🩺</span>
+                    <h5 className="text-xl font-black text-slate-900 mt-1">{doctorsList.length}</h5>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Active Staff Doctors</p>
+                  </div>
+                  <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                    <span className="text-xl">📦</span>
+                    <h5 className="text-xl font-black text-slate-900 mt-1">
+                      {inventory.reduce((acc, item) => acc + item.stock, 0)}
+                    </h5>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Total Units Stocked</p>
+                  </div>
+                  <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                    <span className="text-xl">💵</span>
+                    <h5 className="text-xl font-black text-slate-900 mt-1">
+                      {settings.currency} {billingList.filter(b => b.status === 'Unpaid').reduce((acc, b) => acc + (b.total - b.paidAmount), 0)}
+                    </h5>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Receivable Balance</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* HOSPITAL SETTINGS MODULE */}
+          {activeRole === 'Settings' && (
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden max-w-3xl mx-auto">
+              <div className="p-5 border-b border-slate-100 bg-slate-50">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Hospital Configuration Variables</h3>
+                <p className="text-xs text-slate-400">Modify framework state fields and dynamic template variables instantly.</p>
+              </div>
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Hospital Branding Title</label>
+                    <input 
+                      type="text" 
+                      value={settings.hospitalName} 
+                      onChange={(e) => setSettings({...settings, hospitalName: e.target.value})}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Global Currency Symbol</label>
+                    <input 
+                      type="text" 
+                      value={settings.currency} 
+                      onChange={(e) => setSettings({...settings, currency: e.target.value})}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">State Refresh Routine</label>
+                    <select 
+                      value={settings.refreshInterval} 
+                      onChange={(e) => setSettings({...settings, refreshInterval: e.target.value})}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"
+                    >
+                      <option value="Live Updates">Live Intercept Streams</option>
+                      <option value="5 Minutes">Interval-based Polling (5m)</option>
+                      <option value="Manual">Manual Hardware Triggers Only</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Database Backup Routine</label>
+                    <select 
+                      value={settings.backupFrequency} 
+                      onChange={(e) => setSettings({...settings, backupFrequency: e.target.value})}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"
+                    >
+                      <option value="Daily Automatic">Daily Encrypted Cloud Mirror</option>
+                      <option value="Weekly Secure">Weekly Local Storage Sync</option>
+                      <option value="Disabled">No Automated System Backup</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-teal-50 border border-teal-100 text-teal-800 text-xs rounded-xl flex items-start space-x-3 font-semibold">
+                  <span className="text-base">ℹ️</span>
+                  <div>
+                    <p className="font-bold text-teal-900 uppercase text-[10px] tracking-wider mb-0.5">Dynamic Engine Notification</p>
+                    Changing config options alters global UI variables instantly across all workspace navigation segments.
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-4 border-t border-slate-100">
+                  <button onClick={() => alert('Operational variable matrix committed to application state.')} className="px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md transition-all">
+                    Save Config Settings
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* APPOINTMENTS MODULE */}
+          {activeRole === 'Appointments' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Schedule Slot</h3>
                 <form onSubmit={handleFormSubmit} className="space-y-4">
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Select Patient</label>
-                    <select value={selectedPatient} onChange={(e) => setSelectedPatient(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all">
-                      <option value="">-- Choose Patient --</option>
-                      {patientsList.map(p => <option key={p.id} value={p.name}>{p.name} ({p.id})</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Assigned Physician</label>
-                    <select value={selectedDoctor} onChange={(e) => setSelectedDoctor(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all">
-                      <option value="">-- Choose Doctor --</option>
-                      {doctorsList.map(d => <option key={d.id} value={d.name}>{d.name} ({d.specialization})</option>)}
-                    </select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Date</label>
-                      <input type="date" value={appointmentDate} onChange={(e) => setAppointmentDate(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all" />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Time</label>
-                      <input type="text" placeholder="e.g. 11:30 AM" value={appointmentTime} onChange={(e) => setAppointmentTime(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all" />
-                    </div>
-                  </div>
-                  <button type="submit" className="w-full flex items-center justify-center bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-xs"><UIListIcons.Plus /> Lock Schedule</button>
-                </form>
-              </div>
-
-              {/* Appointment Schedule List */}
-              <div className="lg:col-span-2 space-y-4">
-                <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest">Active Consultation Queue</h3>
-                {appointments.filter(a => searchFilter(a.patientName) || searchFilter(a.doctorName)).map(apt => (
-                  <div key={apt.id} className="bg-white p-5 rounded-2xl border border-slate-200/85 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:shadow-md transition-all">
-                    <div className="flex items-start space-x-4">
-                      <span className="text-2xl p-2 bg-indigo-50 text-indigo-600 rounded-xl">📅</span>
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <h4 className="text-base font-black text-slate-900">{apt.patientName}</h4>
-                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-slate-100 rounded-md text-slate-400">{apt.id}</span>
-                        </div>
-                        <p className="text-xs text-slate-500 font-bold mt-1">🩺 Consultation Dr: <span className="text-teal-700 font-medium">{apt.doctorName}</span></p>
-                        <div className="flex items-center space-x-4 text-xs font-semibold text-slate-400 mt-2">
-                          <span>📅 {apt.date}</span>
-                          <span>⏰ {apt.time}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <span className={`self-start sm:self-center px-3 py-1 rounded-full text-[10px] font-black uppercase text-center ${
-                      apt.status === 'Confirmed' ? 'bg-indigo-100 text-indigo-800' : apt.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                    }`}>{apt.status}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* =========================================================================
-              2. PRESCRIPTION MODULE
-              ========================================================================= */}
-          {activeRole === 'Prescription' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start animate-fadeIn">
-              {/* Rx Formulation Form */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 hover:shadow-md transition-all">
-                <div>
-                  <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Generate Rx Pad</h3>
-                  <p className="text-xs text-slate-400">Record diagnosis and specify exact dosage regimes.</p>
-                </div>
-                <form onSubmit={handleFormSubmit} className="space-y-4">
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Target Patient</label>
                     <select value={selectedPatient} onChange={(e) => setSelectedPatient(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all">
                       <option value="">-- Choose Patient --</option>
                       {patientsList.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Prescribing Physician</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Assigned Physician</label>
+                    <select value={selectedDoctor} onChange={(e) => setSelectedDoctor(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all">
+                      <option value="">-- Choose Doctor --</option>
+                      {doctorsList.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Date</label>
+                      <input type="date" value={appointmentDate} onChange={(e) => setAppointmentDate(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"/>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Time</label>
+                      <input type="text" placeholder="e.g., 10:30 AM" value={appointmentTime} onChange={(e) => setAppointmentTime(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"/>
+                    </div>
+                  </div>
+                  <button type="submit" className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all">
+                    Register Appointment
+                  </button>
+                </form>
+              </div>
+
+              <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                      <th className="p-4">ID</th>
+                      <th className="p-4">Patient</th>
+                      <th className="p-4">Doctor</th>
+                      <th className="p-4">Schedule</th>
+                      <th className="p-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                    {appointments.filter(a => searchFilter(a.patientName) || searchFilter(a.doctorName)).map(apt => (
+                      <tr key={apt.id} className="hover:bg-slate-50/80 transition-all">
+                        <td className="p-4 font-bold text-teal-600">{apt.id}</td>
+                        <td className="p-4 font-black text-slate-900">{apt.patientName}</td>
+                        <td className="p-4">{apt.doctorName}</td>
+                        <td className="p-4">
+                          <span className="block font-medium text-slate-500">{apt.date}</span>
+                          <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded-sm font-bold text-slate-600">{apt.time}</span>
+                        </td>
+                        <td className="p-4 text-right">
+                          <button onClick={() => removeAppointment(apt.id)} className="text-slate-400 hover:text-rose-600 p-1 rounded-md hover:bg-rose-50 transition-all">
+                            <UIListIcons.Trash />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* PRESCRIPTION MODULE */}
+          {activeRole === 'Prescription' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Issue Rx Pad</h3>
+                <form onSubmit={handleFormSubmit} className="space-y-4">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Select Patient</label>
+                    <select value={selectedPatient} onChange={(e) => setSelectedPatient(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all">
+                      <option value="">-- Choose Patient --</option>
+                      {patientsList.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Prescribing Doctor</label>
                     <select value={selectedDoctor} onChange={(e) => setSelectedDoctor(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all">
                       <option value="">-- Choose Doctor --</option>
                       {doctorsList.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Clinical Diagnosis</label>
-                    <input type="text" placeholder="e.g. Acute Migraine / Seasonal Allergies" value={rxDiagnosis} onChange={(e) => setRxDiagnosis(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all" />
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Diagnosis</label>
+                    <input type="text" placeholder="e.g., Seasonal Flu" value={rxDiagnosis} onChange={(e) => setRxDiagnosis(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"/>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Prescribed Meds & Dosage Instruction</label>
-                    <textarea rows="3" placeholder="e.g. Panadol 500mg (2x daily for 5 days), Syp. Hydryllin 1tsp (TDS)" value={rxMeds} onChange={(e) => setRxMeds(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all resize-none"></textarea>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Medications & Dosage</label>
+                    <textarea rows="3" placeholder="e.g., Paracetamol 500mg (2x daily)" value={rxMeds} onChange={(e) => setRxMeds(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all resize-none"/>
                   </div>
-                  <button type="submit" className="w-full flex items-center justify-center bg-cyan-800 hover:bg-cyan-900 text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-xs"><UIListIcons.Plus /> Commit Prescription</button>
+                  <button type="submit" className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all">
+                    Commit Prescription Record
+                  </button>
                 </form>
               </div>
 
-              {/* Prescription Archive Cards */}
-              <div className="lg:col-span-2 space-y-6">
-                <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest font-sans">Active Prescriptions Ledger</h3>
-                {prescriptions.filter(p => searchFilter(p.patientName) || searchFilter(p.diagnosis)).map(rx => (
-                  <div key={rx.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-md transition-all">
-                    <div className="bg-gradient-to-r from-cyan-900/10 to-teal-900/5 p-4 border-b border-slate-100 flex justify-between items-center">
-                      <div>
-                        <span className="text-[10px] font-mono font-bold text-teal-800 bg-teal-50 px-2.5 py-1 rounded-md">{rx.id}</span>
-                        <span className="text-xs text-slate-400 font-semibold ml-3">Issued: {rx.date}</span>
-                      </div>
-                      <span className="text-xs font-black text-slate-500 font-mono">💊 Subhan Rx Pad</span>
-                    </div>
-                    <div className="p-6 space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Patient Name</p>
-                          <h4 className="text-base font-black text-slate-900">{rx.patientName}</h4>
+              <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+                <div className="p-4 border-b border-slate-100 bg-slate-50 text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                  Active Clinical Formulas Issued
+                </div>
+                <div className="divide-y divide-slate-100 max-h-[500px] overflow-y-auto">
+                  {prescriptions.filter(p => searchFilter(p.patientName) || searchFilter(p.diagnosis)).map(rx => (
+                    <div key={rx.id} className="p-5 hover:bg-slate-50/50 transition-all flex justify-between items-start gap-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs font-black text-teal-600">{rx.id}</span>
+                          <span className="h-1 w-1 rounded-full bg-slate-300"></span>
+                          <span className="text-xs font-black text-slate-900">{rx.patientName}</span>
+                          <span className="text-[10px] text-slate-400 font-medium">via {rx.doctorName}</span>
                         </div>
                         <div>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Attending Physician</p>
-                          <h4 className="text-sm font-black text-slate-700">{rx.doctorName}</h4>
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Clinical Implication</span>
+                          <p className="text-xs font-bold text-slate-800">{rx.diagnosis}</p>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Regimen Matrix</span>
+                          <p className="text-xs text-slate-500 bg-slate-50 border border-slate-100 p-2 rounded-lg font-mono">{rx.meds}</p>
                         </div>
                       </div>
-                      <div className="border-t border-slate-100 pt-3">
-                        <p className="text-[10px] font-black text-rose-500 uppercase tracking-wider">Clinical Diagnosis</p>
-                        <p className="text-sm font-black text-slate-800 mt-0.5">{rx.diagnosis}</p>
-                      </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                        <p className="text-[10px] font-black text-teal-700 uppercase tracking-wider">Meds Registry & Instructions</p>
-                        <p className="text-xs text-slate-700 font-bold mt-1.5 leading-relaxed">{rx.meds}</p>
-                      </div>
+                      <button onClick={() => removePrescription(rx.id)} className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-all flex-shrink-0">
+                        <UIListIcons.Trash />
+                      </button>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
-          {/* =========================================================================
-              3. MEDICAL HISTORY MODULE
-              ========================================================================= */}
+          {/* MEDICAL HISTORY MODULE */}
           {activeRole === 'Medical History' && (
-            <div className="space-y-6 animate-fadeIn max-w-4xl mx-auto">
-              <div>
-                <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Global Clinical Patient Case Files</h3>
-                <p className="text-xs text-slate-400">Review comprehensive longitudinal health history timeline.</p>
-              </div>
-
-              {medicalHistories.map(mh => (
-                <div key={mh.id} className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6 hover:shadow-sm transition-all">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center font-black text-slate-500">PT</div>
-                      <div>
-                        <h4 className="text-lg font-black text-slate-900">{mh.patientName}</h4>
-                        <span className="text-[10px] font-mono font-bold text-slate-400">{mh.id}</span>
-                      </div>
+            <div className="space-y-6">
+              {medicalHistories.map(historyObj => (
+                <div key={historyObj.id} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <div>
+                      <h3 className="text-base font-black text-slate-900 tracking-tight">{historyObj.patientName}</h3>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Timeline Chart &bull; ID: {historyObj.id}</p>
                     </div>
-                    <span className="self-start sm:self-center px-3 py-1 bg-rose-50 text-rose-700 rounded-lg text-xs font-black uppercase tracking-wider">Blood Status: {mh.bloodGroup}</span>
+                    <span className="text-xs font-black bg-teal-50 text-teal-700 border border-teal-200 px-3 py-1 rounded-lg">Blood Group: {historyObj.bloodGroup}</span>
                   </div>
-
-                  {/* Vertical History Timeline */}
-                  <div className="relative pl-6 border-l-2 border-slate-200 space-y-6 ml-3">
-                    {mh.history.map((record, index) => (
+                  <div className="relative border-l-2 border-slate-100 ml-2 pl-6 space-y-6">
+                    {historyObj.history.map((event, index) => (
                       <div key={index} className="relative">
-                        {/* Timeline Node Point indicator */}
-                        <span className="absolute -left-[31px] top-1.5 h-4 w-4 rounded-full bg-teal-500 border-4 border-white shadow-xs"></span>
-                        
-                        <div className="bg-slate-50 border border-slate-100 p-4 rounded-xl space-y-2">
-                          <div className="flex justify-between items-center">
-                            <h5 className="text-sm font-black text-slate-900">{record.event}</h5>
-                            <span className="text-xs text-slate-400 font-semibold">{record.date}</span>
-                          </div>
-                          <p className="text-xs font-semibold text-slate-600 mt-1 leading-relaxed">{record.details}</p>
-                          <div className="border-t border-slate-200/60 pt-2 flex items-center justify-between mt-3 text-[10px] font-bold text-slate-400 uppercase">
-                            <span>Authoring Dr: {record.doc}</span>
-                            <span className="text-teal-600">Verified System Record</span>
-                          </div>
+                        <div className="absolute -left-[31px] top-0.5 bg-white border-2 border-teal-600 rounded-full h-3 w-3"></div>
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-bold text-slate-400">{event.date} &bull; Attending: {event.doc}</span>
+                          <h4 className="text-sm font-black text-slate-900">{event.event}</h4>
+                          <p className="text-xs text-slate-500 max-w-2xl">{event.details}</p>
                         </div>
                       </div>
                     ))}
@@ -722,65 +876,134 @@ export default function App() {
             </div>
           )}
 
-          {/* =========================================================================
-              4. INVENTORY MODULE
-              ========================================================================= */}
+          {/* INVENTORY MODULE */}
           {activeRole === 'Inventory' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start animate-fadeIn">
-              {/* Inventory Item Form */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 hover:shadow-md transition-all">
-                <div>
-                  <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Register Medical Inventory</h3>
-                  <p className="text-xs text-slate-400">Onboard consumables, diagnostics, and therapeutics.</p>
-                </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Add Supply Unit</h3>
                 <form onSubmit={handleFormSubmit} className="space-y-4">
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Item Name / Dosage Form</label>
-                    <input type="text" placeholder="e.g. Normal Saline, Syringes" value={invItem} onChange={(e) => setInvItem(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all" />
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Item Label</label>
+                    <input type="text" placeholder="e.g., Insulin Amps" value={invItem} onChange={(e) => setInvItem(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"/>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Supply Category</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Allocation Category</label>
                     <select value={invCat} onChange={(e) => setInvCat(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all">
-                      <option value="Pharmacy">Pharmacy Drugs</option>
-                      <option value="Disposables">Surgical Disposables</option>
-                      <option value="Fluids">IV Infusions & Fluids</option>
-                      <option value="Emergency Meds">Emergency Crash Cart</option>
+                      <option value="Pharmacy">Pharmacy</option>
+                      <option value="Disposables">Disposables</option>
+                      <option value="Fluids">Fluids</option>
+                      <option value="Emergency Meds">Emergency Meds</option>
                     </select>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Initial Stock Qty</label>
-                      <input type="number" placeholder="500" value={invQty} onChange={(e) => setInvQty(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all" />
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Total Quantity</label>
+                      <input type="number" placeholder="100" value={invQty} onChange={(e) => setInvQty(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"/>
                     </div>
                     <div>
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Safety Min Limit</label>
-                      <input type="number" placeholder="50" value={invMin} onChange={(e) => setInvMin(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all" />
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Min Threshold</label>
+                      <input type="number" placeholder="20" value={invMin} onChange={(e) => setInvMin(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"/>
                     </div>
                   </div>
-                  <button type="submit" className="w-full flex items-center justify-center bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-xs"><UIListIcons.Plus /> Allocate Inventory Item</button>
+                  <button type="submit" className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all">
+                    Register Line Item
+                  </button>
                 </form>
               </div>
 
-              {/* Inventory Stock Cards */}
-              <div className="lg:col-span-2 space-y-4">
-                <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest">Active Stock Ledger</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {inventory.filter(i => searchFilter(i.itemName) || searchFilter(i.category)).map(item => (
-                    <div key={item.id} className="bg-white p-5 rounded-2xl border border-slate-200 flex flex-col justify-between hover:shadow-md transition-all">
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-mono font-bold text-slate-400 px-2 py-0.5 bg-slate-100 rounded-md">{item.id}</span>
-                          <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-md text-white ${
-                            item.status === 'In Stock' ? 'bg-emerald-600' : item.status === 'Low Stock' ? 'bg-amber-500' : 'bg-rose-600 animate-pulse'
+              <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                      <th className="p-4">Item Matrix</th>
+                      <th className="p-4">Category</th>
+                      <th className="p-4">Stock Matrix</th>
+                      <th className="p-4">Status Alert</th>
+                      <th className="p-4 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                    {inventory.filter(i => searchFilter(i.itemName) || searchFilter(i.category)).map(item => (
+                      <tr key={item.id} className="hover:bg-slate-50/80 transition-all">
+                        <td className="p-4">
+                          <span className="block font-black text-slate-900">{item.itemName}</span>
+                          <span className="text-[10px] font-mono text-slate-400">{item.id}</span>
+                        </td>
+                        <td className="p-4 font-bold text-slate-500">{item.category}</td>
+                        <td className="p-4 font-mono font-bold text-slate-900">{item.stock} <span className="text-[10px] font-sans text-slate-400 font-medium">{item.unit}</span></td>
+                        <td className="p-4">
+                          <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                            item.status === 'In Stock' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                            item.status === 'Low Stock' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                            'bg-rose-50 text-rose-700 border border-rose-200 animate-pulse'
                           }`}>{item.status}</span>
+                        </td>
+                        <td className="p-4 text-right">
+                          <button onClick={() => removeInventoryItem(item.id)} className="text-slate-400 hover:text-rose-600 p-1 rounded-md hover:bg-rose-50 transition-all">
+                            <UIListIcons.Trash />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* BILLING MODULE */}
+          {activeRole === 'Billing' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Invoice Generation</h3>
+                <form onSubmit={handleFormSubmit} className="space-y-4">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Select Patient Target</label>
+                    <select value={billPatient} onChange={(e) => setBillPatient(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all">
+                      <option value="">-- Choose Patient --</option>
+                      {patientsList.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Gross Fee Amount ({settings.currency})</label>
+                    <input type="number" placeholder="5000" value={billAmount} onChange={(e) => setBillAmount(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"/>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Line Items (Comma Separated)</label>
+                    <input type="text" placeholder="Consultation Fee (Rs. 2000), Lab (Rs. 3000)" value={billItemsStr} onChange={(e) => setBillItemsStr(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"/>
+                  </div>
+                  <button type="submit" className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all">
+                    Generate Paid Receipt
+                  </button>
+                </form>
+              </div>
+
+              <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+                <div className="divide-y divide-slate-100">
+                  {billingList.filter(b => searchFilter(b.patientName) || searchFilter(b.status)).map(bill => (
+                    <div key={bill.id} className="p-6 hover:bg-slate-50/60 transition-all space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <span className="text-[10px] font-mono text-slate-400 block">{bill.id} &bull; Generated {bill.date}</span>
+                          <span className="text-sm font-black text-slate-900">{bill.patientName}</span>
                         </div>
-                        <h4 className="text-base font-black text-slate-900">{item.itemName}</h4>
-                        <div className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-3 text-xs font-semibold text-slate-500">
-                          <div>Available: <span className="text-slate-900 font-bold">{item.stock} {item.unit}</span></div>
-                          <div>Min Limit: <span className="text-slate-900 font-bold">{item.threshold}</span></div>
+                        <div className="text-right flex items-center space-x-3">
+                          <div>
+                            <span className="block text-xs font-black text-slate-900">{settings.currency} {bill.total}</span>
+                            {bill.discount > 0 && <span className="text-[10px] text-emerald-600 font-bold">Disc: {settings.currency} {bill.discount}</span>}
+                          </div>
+                          <span className={`px-2 py-0.5 text-[9px] font-black uppercase rounded-sm ${bill.status === 'Paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>{bill.status}</span>
+                          <button onClick={() => removeInvoice(bill.id)} className="text-slate-400 hover:text-rose-600 p-1 rounded-md transition-all">
+                            <UIListIcons.Trash />
+                          </button>
                         </div>
                       </div>
-                      <div className="border-t border-slate-100 pt-2.5 mt-4 text-[10px] font-black text-teal-600 uppercase tracking-wider">Category: {item.category}</div>
+                      <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">Receipt Allocation Breakdown</span>
+                        <ul className="list-disc pl-4 space-y-0.5 text-[11px] font-medium text-slate-600">
+                          {bill.items.map((it, idx) => <li key={idx}>{it}</li>)}
+                        </ul>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -788,240 +1011,125 @@ export default function App() {
             </div>
           )}
 
-          {/* =========================================================================
-              5. BILLING MODULE
-              ========================================================================= */}
-          {activeRole === 'Billing' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start animate-fadeIn">
-              {/* Billing Invoice Entry Generator */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 hover:shadow-md transition-all">
-                <div>
-                  <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Invoice Processing</h3>
-                  <p className="text-xs text-slate-400">Initialize financial transactions and itemize details.</p>
-                </div>
-                <form onSubmit={handleFormSubmit} className="space-y-4">
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Billed Patient</label>
-                    <select value={billPatient} onChange={(e) => setBillPatient(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all">
-                      <option value="">-- Choose Patient --</option>
-                      {patientsList.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Consultation Total Charge (Rs.)</label>
-                    <input type="number" placeholder="e.g. 7500" value={billAmount} onChange={(e) => setBillAmount(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all" />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Itemized Breakdown (Comma Separated)</label>
-                    <textarea rows="3" placeholder="Consult Fee (Rs. 2000), Diagnostic Lab Check (Rs. 4000), IV Drip (Rs. 1500)" value={billItemsStr} onChange={(e) => setBillItemsStr(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all resize-none"></textarea>
-                  </div>
-                  <button type="submit" className="w-full flex items-center justify-center bg-cyan-800 hover:bg-cyan-900 text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-xs"><UIListIcons.Plus /> Commit Invoice Ledger</button>
-                </form>
-              </div>
-
-              {/* Invoices List Display with visual layout */}
-              <div className="lg:col-span-2 space-y-6">
-                <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest">Invoices Registry</h3>
-                {billingList.filter(b => searchFilter(b.patientName)).map(bill => (
-                  <div key={bill.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-md transition-all">
-                    <div className="bg-slate-50 p-4 border-b border-slate-100 flex justify-between items-center">
-                      <div>
-                        <span className="text-xs font-mono font-black text-slate-500 bg-slate-100 px-2 py-1 rounded">{bill.id}</span>
-                        <span className="text-xs text-slate-400 font-semibold ml-3">Date: {bill.date}</span>
-                      </div>
-                      <span className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-md text-white ${bill.status === 'Paid' ? 'bg-emerald-600' : 'bg-rose-600'}`}>{bill.status}</span>
-                    </div>
-                    <div className="p-6 space-y-4">
-                      <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Patient</p>
-                        <h4 className="text-base font-black text-slate-900">{bill.patientName}</h4>
-                      </div>
-                      
-                      <div className="border-t border-slate-100 pt-3">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Itemized Breakdown</p>
-                        <div className="space-y-1.5">
-                          {bill.items.map((item, index) => (
-                            <div key={index} className="flex justify-between text-xs font-semibold text-slate-600 bg-slate-50 p-2 rounded-lg">
-                              <span>{item}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="border-t border-slate-100 pt-3 flex justify-between items-center">
-                        <div>
-                          {bill.discount > 0 && <p className="text-[11px] font-bold text-slate-400 line-through">Subtotal: Rs. {bill.total}</p>}
-                          <p className="text-lg font-black text-teal-800">Grand Total: Rs. {bill.total - bill.discount}</p>
-                        </div>
-                        <button onClick={() => alert(`Invoice generated successfully: Paid amount Rs. ${bill.total - bill.discount}`)} className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg text-xs uppercase transition-all">🖨️ Print Receipt</button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* DOCTOR MODULE REGISTRY ENTRY */}
+          {/* DOCTOR REGISTRY MODULE */}
           {activeRole === 'Doctor' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start animate-fadeIn">
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 transform transition-all duration-300 hover:shadow-md">
-                <div>
-                  <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Onboard Physician</h3>
-                  <p className="text-xs text-slate-400">Add medical professional metadata to registry.</p>
-                </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Onboard Staff</h3>
                 <form onSubmit={handleFormSubmit} className="space-y-4">
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Physician Name</label>
-                    <input type="text" value={formInpName} onChange={(e) => setFormInpName(e.target.value)} placeholder="e.g. Dr. Hamza Shah" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all" />
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Full Legal Name</label>
+                    <input type="text" placeholder="Hamza Shah" value={formInpName} onChange={(e) => setFormInpName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"/>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Specialization Department</label>
-                    <input type="text" value={formInpField2} onChange={(e) => setFormInpField2(e.target.value)} placeholder="e.g. Cardiology" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all" />
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Specialization Matrix</label>
+                    <input type="text" placeholder="Cardiology" value={formInpField2} onChange={(e) => setFormInpField2(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"/>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Assigned Wing Location</label>
-                    <input type="text" value={formInpField3} onChange={(e) => setFormInpField3(e.target.value)} placeholder="e.g. ICU Wing A" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all" />
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Assigned Clinic Ward</label>
+                    <input type="text" placeholder="ICU Block A" value={formInpField3} onChange={(e) => setFormInpField3(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"/>
                   </div>
-                  <button type="submit" className="w-full flex items-center justify-center bg-teal-600 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider hover:bg-teal-700 transition-all shadow-xs"><UIListIcons.Plus /> Commit Registry Node</button>
+                  <button type="submit" className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all">
+                    Register Staff Card
+                  </button>
                 </form>
               </div>
-              <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                {doctorsList.filter(d => searchFilter(d.name)).map(doc => (
-                  <div key={doc.id} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between hover:-translate-y-1 hover:shadow-md transition-all duration-300 group relative">
-                    <button onClick={() => removeDoctor(doc.id)} className="absolute top-4 right-4 p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all z-10" title="Remove Doctor">
-                      <UIListIcons.Trash />
-                    </button>
-                    <div className="space-y-2 pr-6">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="text-[10px] font-mono font-bold text-slate-400 px-2 py-0.5 bg-slate-100 rounded-md">{doc.id}</span>
-                        <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-md text-white ${doc.availability === 'Available' ? 'bg-emerald-600' : doc.availability === 'In Surgery' ? 'bg-rose-600' : 'bg-amber-500'}`}>{doc.availability}</span>
-                      </div>
-                      <h4 className="text-base font-black text-slate-900 group-hover:text-teal-700 transition-colors">{doc.name}</h4>
-                      <p className="text-xs font-bold text-slate-500 flex items-center">🩺 Specialty: <span className="text-slate-800 ml-1 font-medium">{doc.specialization}</span></p>
-                      <p className="text-xs font-bold text-slate-500 flex items-center">📍 Station: <span className="text-slate-700 ml-1 font-mono">{doc.ward}</span></p>
-                    </div>
-                  </div>
-                ))}
+
+              <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                      <th className="p-4">Physician Identity</th>
+                      <th className="p-4">Operational Domain</th>
+                      <th className="p-4">Location Sector</th>
+                      <th className="p-4 text-right">Action Log</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                    {doctorsList.filter(d => searchFilter(d.name) || searchFilter(d.specialization)).map(doc => (
+                      <tr key={doc.id} className="hover:bg-slate-50/80 transition-all">
+                        <td className="p-4">
+                          <span className="block font-black text-slate-900">{doc.name}</span>
+                          <span className="text-[10px] font-mono text-slate-400">{doc.id} &bull; {doc.contact}</span>
+                        </td>
+                        <td className="p-4 font-bold text-teal-700">{doc.specialization}</td>
+                        <td className="p-4 text-slate-500">{doc.ward}</td>
+                        <td className="p-4 text-right">
+                          <button onClick={() => removeDoctor(doc.id)} className="text-slate-400 hover:text-rose-600 p-1 rounded-md hover:bg-rose-50 transition-all">
+                            <UIListIcons.Trash />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
 
-          {/* PATIENT MODULE REGISTRY ENTRY */}
+          {/* PATIENT REGISTRY MODULE */}
           {activeRole === 'Patient' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start animate-fadeIn">
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 transform transition-all duration-300 hover:shadow-md">
-                <div>
-                  <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Patient Intake Log</h3>
-                  <p className="text-xs text-slate-400">Initialize a live frontend patient file tracker.</p>
-                </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Admit Patient</h3>
                 <form onSubmit={handleFormSubmit} className="space-y-4">
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Patient Full Name</label>
-                    <input type="text" value={formInpName} onChange={(e) => setFormInpName(e.target.value)} placeholder="e.g. Ali Butt" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all" />
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Full Legal Name</label>
+                    <input type="text" placeholder="Muhammad Ali" value={formInpName} onChange={(e) => setFormInpName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"/>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Age (Years)</label>
-                      <input type="number" value={formInpField2} onChange={(e) => setFormInpField2(e.target.value)} placeholder="24" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all" />
+                      <input type="number" placeholder="24" value={formInpField2} onChange={(e) => setFormInpField2(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"/>
                     </div>
                     <div>
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Blood Group</label>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">ABO Matrix Group</label>
                       <select value={formInpField4} onChange={(e) => setFormInpField4(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all">
-                        {['O+', 'O-', 'A+', 'A-', 'B+', 'AB+'].map(b => <option key={b} value={b}>{b}</option>)}
+                        {['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'].map(bg => <option key={bg} value={bg}>{bg}</option>)}
                       </select>
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Emergency Contact Cell</label>
-                    <input type="text" value={formInpField3} onChange={(e) => setFormInpField3(e.target.value)} placeholder="e.g. 0300-1234567" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all" />
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Contact Communication Line</label>
+                    <input type="text" placeholder="0300-1234567" value={formInpField3} onChange={(e) => setFormInpField3(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-hidden focus:bg-white focus:border-teal-600 transition-all"/>
                   </div>
-                  <button type="submit" className="w-full flex items-center justify-center bg-cyan-800 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider hover:bg-cyan-900 transition-all shadow-xs"><UIListIcons.Plus /> Register File</button>
+                  <button type="submit" className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all">
+                    Commit Registry Entry
+                  </button>
                 </form>
               </div>
-              <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                {patientsList.filter(p => searchFilter(p.name)).map(pat => (
-                  <div key={pat.id} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between hover:-translate-y-1 hover:shadow-md transition-all duration-300 group relative">
-                    <button onClick={() => removePatient(pat.id)} className="absolute top-4 right-4 p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all z-10" title="Discharge Patient">
-                      <UIListIcons.Trash />
-                    </button>
-                    <div className="space-y-3 pr-6">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-mono font-bold text-slate-400 px-2 py-0.5 bg-slate-100 rounded-md">{pat.id}</span>
-                        <span className={`px-2 py-0.5 rounded-sm text-[10px] font-black uppercase text-white ${pat.condition === 'Critical' ? 'bg-rose-600' : pat.condition === 'Stable' ? 'bg-emerald-600' : 'bg-amber-500'}`}>{pat.condition}</span>
-                      </div>
-                      <h4 className="text-base font-black text-slate-900 group-hover:text-cyan-800 transition-colors">{pat.name}</h4>
-                      <div className="grid grid-cols-2 gap-2 border-t border-b border-slate-100 py-2.5 my-2 text-xs font-semibold text-slate-500">
-                        <div>Age: <span className="text-slate-800 font-medium">{pat.age}</span></div>
-                        <div>Blood: <span className="text-rose-600 font-black">{pat.bloodGroup}</span></div>
-                      </div>
-                      <p className="text-xs font-bold text-slate-500">📞 Contact: <span className="text-slate-800 font-mono font-medium">{pat.contact}</span></p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
-          {/* RECEPTIONIST MODULE REGISTRY ENTRY */}
-          {activeRole === 'Receptionist' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start animate-fadeIn">
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 transform transition-all duration-300 hover:shadow-md">
-                <div>
-                  <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Onboard Support Staff</h3>
-                  <p className="text-xs text-slate-400">Log internal clinical personnel files.</p>
-                </div>
-                <form onSubmit={handleFormSubmit} className="space-y-4">
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Employee Full Name</label>
-                    <input type="text" value={formInpName} onChange={(e) => setFormInpName(e.target.value)} placeholder="e.g. Sana Fatima" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all" />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Operational Designation</label>
-                    <input type="text" value={formInpField2} onChange={(e) => setFormInpField2(e.target.value)} placeholder="e.g. Lead Nurse" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all" />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Assigned Shift Rotation</label>
-                    <input type="text" value={formInpField3} onChange={(e) => setFormInpField3(e.target.value)} placeholder="e.g. Morning Shift" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium outline-hidden focus:bg-white focus:border-teal-600 transition-all" />
-                  </div>
-                  <button type="submit" className="w-full flex items-center justify-center bg-slate-800 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider hover:bg-slate-900 transition-all shadow-xs"><UIListIcons.Plus /> Allocate Entry</button>
-                </form>
-              </div>
-              <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                {staffList.filter(s => searchFilter(s.name)).map(stf => (
-                  <div key={stf.id} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between hover:-translate-y-1 hover:shadow-md transition-all duration-300 relative group">
-                    <button onClick={() => removeStaff(stf.id)} className="absolute top-4 right-4 p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all z-10" title="Remove Staff Member">
-                      <UIListIcons.Trash />
-                    </button>
-                    <div className="space-y-2 pr-6">
-                      <span className="text-[10px] font-mono font-bold text-slate-400 px-2 py-0.5 bg-slate-100 rounded-md self-start inline-block">{stf.id}</span>
-                      <h4 className="text-base font-black text-slate-900">{stf.name}</h4>
-                      <p className="text-xs font-bold text-slate-500">💼 Role: <span className="text-teal-800 font-bold">{stf.designation}</span></p>
-                      <p className="text-xs font-bold text-slate-500">🕒 Shift: <span className="text-slate-800 font-medium">{stf.shift}</span></p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ADMINISTRATIVE SYSTEM AUDIT TRACK */}
-          {activeRole === 'Admin' && (
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden transition-all duration-300 hover:shadow-md animate-fadeIn">
-              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">System Node Action Logs</h3>
-              </div>
-              <div className="divide-y divide-slate-100 font-mono text-xs">
-                <div className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 hover:bg-slate-50/80 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <span className="px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase text-white bg-emerald-600">Success</span>
-                    <span className="text-slate-400 font-bold">LOG-91</span>
-                    <p className="text-slate-700 font-medium"> (Appointments, Prescriptions, Medical History, Inventory, Billing) Initialized Successfully</p>
-                  </div>
-                  <div className="text-right text-[11px] text-slate-400 font-semibold sm:pl-4">
-                    <span>Wali</span> &bull; <span>Live</span>
-                  </div>
-                </div>
+              <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                      <th className="p-4">Patient Demographics</th>
+                      <th className="p-4">ABO Status</th>
+                      <th className="p-4">Department / Clinic</th>
+                      <th className="p-4 text-right">Action Log</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                    {patientsList.filter(p => searchFilter(p.name) || searchFilter(p.id)).map(pat => (
+                      <tr key={pat.id} className="hover:bg-slate-50/80 transition-all">
+                        <td className="p-4">
+                          <span className="block font-black text-slate-900">{pat.name}</span>
+                          <span className="text-[10px] font-mono text-slate-400">{pat.id} &bull; Age {pat.age} &bull; {pat.contact}</span>
+                        </td>
+                        <td className="p-4"><span className="px-2 py-0.5 rounded bg-slate-100 text-[11px] font-mono font-black text-slate-700 border border-slate-200">{pat.bloodGroup}</span></td>
+                        <td className="p-4">
+                          <span className="block font-bold text-slate-600">{pat.department}</span>
+                          <span className="text-[10px] text-slate-400 font-medium">{pat.condition}</span>
+                        </td>
+                        <td className="p-4 text-right">
+                          <button onClick={() => removePatient(pat.id)} className="text-slate-400 hover:text-rose-600 p-1 rounded-md hover:bg-rose-50 transition-all">
+                            <UIListIcons.Trash />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
